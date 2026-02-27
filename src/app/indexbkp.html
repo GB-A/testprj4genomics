@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PGP-UK Genomic Analytics Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+
+<nav class="bg-slate-800 p-4 border-b border-indigo-500/30 flex justify-between items-center sticky top-0 z-50">
+    <div class="flex items-center gap-4">
+        <h1 class="text-xl font-bold text-indigo-400">PGP-UK Dashboard</h1>
+        <div class="bg-slate-900 px-3 py-1 rounded-full border border-slate-700 text-[10px] font-mono text-green-400">
+            LOADED: <span id="recordCount">0</span> VARIANTS
+        </div>
+    </div>
+    <div class="flex gap-4">
+        <button onclick="openModal()" id="addVariantBtn"
+                class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-xs font-bold transition">Add Variant
+        </button>
+        <select id="userRole" onchange="applyRBAC()"
+                class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-cyan-400">
+            <option value="admin">Admin</option>
+            <option value="researcher">Researcher</option>
+        </select>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-center items-center">
+            <span class="text-slate-500 text-[10px] uppercase font-bold">Total Variants</span>
+            <span id="stat-total" class="text-2xl font-bold text-indigo-400">0</span>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-center items-center">
+            <span class="text-slate-500 text-[10px] uppercase font-bold">High Impact</span>
+            <span id="stat-high" class="text-2xl font-bold text-rose-400">0</span>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-center items-center">
+            <span class="text-slate-500 text-[10px] uppercase font-bold">Unique Participants</span>
+            <span id="stat-unique" class="text-2xl font-bold text-emerald-400">0</span>
+        </div>
+    </div>
+
+    <div class="lg:col-span-4 space-y-6">
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+            <h3 class="text-xs font-bold text-slate-500 uppercase mb-4 text-center">Ancestry Admixture</h3>
+            <canvas id="ancestryChart"></canvas>
+        </div>
+
+        <div class="bg-black p-4 rounded-xl border border-slate-700">
+            <h2 class="text-indigo-500 text-[10px] font-bold uppercase mb-2">Audit Log</h2>
+            <div id="auditLog" class="font-mono text-[10px] text-green-500 space-y-1 h-48 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-8 bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-2xl">
+        <div class="p-4 border-b border-slate-700">
+            <input type="text" id="searchBar" onkeyup="filterTable()" placeholder="Filter variants..."
+                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 outline-none">
+        </div>
+        <div class="overflow-y-auto h-[500px]">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-900 sticky top-0 text-slate-500 uppercase text-[10px]">
+                <tr>
+                    <th class="p-4">Gene</th>
+                    <th class="p-4">rsID</th>
+                    <th class="p-4">Ancestry</th>
+                    <th class="p-4 text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div id="modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[100]">
+    <div class="bg-slate-800 p-8 rounded-xl border border-indigo-500/50 w-96 shadow-2xl">
+        <h2 id="modalTitle" class="text-xl font-bold mb-4 text-indigo-400">Variant Action</h2>
+        <div class="space-y-4">
+            <input type="hidden" id="editIndex">
+            <input type="text" id="geneInput" placeholder="Gene"
+                   class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none">
+            <input type="text" id="rsidInput" placeholder="rsID"
+                   class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none">
+            <select id="ancestryInput"
+                    class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none">
+                <option value="European">European</option>
+                <option value="African">African</option>
+                <option value="South Asian">South Asian</option>
+            </select>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xs px-4 py-2">Cancel</button>
+            <button onclick="saveRecord()"
+                    class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded text-xs font-bold transition">Save
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let fullData = [];
+    let ancestryChart;
+
+    async function init() {
+        try {
+            const response = await fetch('cleaned_data.json');
+            fullData = await response.json();
+            updateUI();
+            logAudit("Dashboard initialized with real data.");
+        } catch (e) {
+            logAudit("Failed to fetch JSON data.");
+        }
+    }
+
+    function updateUI() {
+        renderTable(fullData);
+        renderChart();
+        updateStats();
+        document.getElementById('recordCount').innerText = fullData.length;
+    }
+
+    function updateStats() {
+        document.getElementById('stat-total').innerText = fullData.length;
+        document.getElementById('stat-high').innerText = fullData.filter(d => d.gene === 'BRCA1').length;
+        const uniqueP = [...new Set(fullData.map(d => d.participant_id))].length;
+        document.getElementById('stat-unique').innerText = uniqueP;
+    }
+
+    function renderTable(dataToDisplay) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = dataToDisplay.map((item, index) => `
+            <tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition">
+                <td class="p-4 font-bold text-indigo-300">${item.gene}</td>
+                <td class="p-4 text-slate-400 font-mono text-xs">${item.rsid}</td>
+                <td class="p-4 text-slate-500 text-xs">${item.ancestry}</td>
+                <td class="p-4 text-right space-x-2">
+                    <button onclick="openModal(${index})" class="edit-btn text-indigo-400 text-xs">Edit</button>
+                    <button onclick="deleteRecord(${index})" class="delete-btn text-red-500 text-xs">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+        applyRBAC();
+    }
+
+    function renderChart() {
+        const ctx = document.getElementById('ancestryChart').getContext('2d');
+        const counts = fullData.reduce((acc, curr) => {
+            acc[curr.ancestry] = (acc[curr.ancestry] || 0) + 1;
+            return acc;
+        }, {});
+
+        if (ancestryChart) ancestryChart.destroy();
+        ancestryChart = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts),
+                    backgroundColor: ['rgba(99, 102, 241, 0.5)', 'rgba(244, 63, 94, 0.5)', 'rgba(16, 185, 129, 0.5)']
+                }]
+            },
+            options: {
+                scales: { r: { grid: { color: '#334155' }, ticks: { display: false } } },
+                plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } }
+            }
+        });
+    }
+
+    function filterTable() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const filtered = fullData.filter(d => d.gene.toLowerCase().includes(query) || d.rsid.toLowerCase().includes(query));
+        renderTable(filtered);
+    }
+
+    function deleteRecord(index) {
+        fullData.splice(index, 1);
+        updateUI();
+        logAudit("Record deleted.");
+    }
+function openModal(index = null) {
+    const modal = document.getElementById('modal');
+    modal.classList.remove('hidden');
+
+    if (index !== null) {
+        // --- EDIT MODE ---
+        const record = fullData[index];
+        document.getElementById('modalTitle').innerText = "Update Genomic Record";
+        document.getElementById('editIndex').value = index;
+
+        document.getElementById('geneInput').value = record.gene;
+        document.getElementById('rsidInput').value = record.rsid;
+
+        // FIX: Set the dropdown to match the existing record data
+        document.getElementById('ancestryInput').value = record.ancestry;
+
+        logAudit(`UI SYNC: Modal loaded for ${record.rsid} (${record.ancestry})`);
+    } else {
+        // --- ADD MODE ---
+        document.getElementById('modalTitle').innerText = "Add New Clinical Variant";
+        document.getElementById('editIndex').value = "";
+        document.getElementById('geneInput').value = "";
+        document.getElementById('rsidInput').value = "";
+        document.getElementById('ancestryInput').value = "European"; // Default for new
+        logAudit("UI SYNC: Modal reset for new entry.");
+    }
+}
+
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+    function saveRecord() {
+    const idx = document.getElementById('editIndex').value;
+    const gene = document.getElementById('geneInput').value;
+    const rsid = document.getElementById('rsidInput').value;
+    const ancestry = document.getElementById('ancestryInput').value; // Capture selection
+
+    if (!gene || !rsid) {
+        alert("Validation Error: Gene and rsID are required.");
+        return;
+    }
+
+    if (idx === "") {
+        // CREATE
+        const newEntry = {
+            gene: gene.toUpperCase(),
+            rsid: rsid.toLowerCase(),
+            participant_id: "UK-MANUAL",
+            ancestry: ancestry // Save selected ancestry
+        };
+        fullData.unshift(newEntry);
+        logAudit(`POST: Created ${rsid}`);
+    } else {
+        // UPDATE
+        fullData[idx].gene = gene.toUpperCase();
+        fullData[idx].rsid = rsid.toLowerCase();
+        fullData[idx].ancestry = ancestry; // Persist the updated selection
+        logAudit(`PUT: Updated ${rsid} ancestry to ${ancestry}`);
+    }
+
+    updateUI(); // Refresh Table, Chart, and Stats
+    closeModal();
+    showToast("Record Saved Successfully!");
+}
+
+    function applyRBAC() {
+        const isAdmin = document.getElementById('userRole').value === 'admin';
+        document.querySelectorAll('.edit-btn, .delete-btn, #addVariantBtn').forEach(e => e.style.display = isAdmin ? 'inline-block' : 'none');
+    }
+
+    function logAudit(msg) {
+        const log = document.getElementById('auditLog');
+        log.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+    function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.innerText = `✅ ${message}`;
+    toast.classList.remove('translate-y-20');
+    setTimeout(() => {
+        toast.classList.add('translate-y-20');
+    }, 3000);
+}
+
+    window.onload = init;
+</script>
+<div id="toast"
+     class="fixed bottom-5 right-5 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-2xl transform translate-y-20 transition-transform duration-300 z-[200] font-bold text-sm">
+    ✅ Record Saved Successfully!
+</div>
+</body>
+</html>
