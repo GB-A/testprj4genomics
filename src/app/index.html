@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGP-UK Genomic Portal | Biotech Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f0f4f8; }
+    ::-webkit-scrollbar-thumb { background: #00d1b2; border-radius: 10px; }
+    .biotech-gradient { background: linear-gradient(135deg, #0a2540 0%, #163e66 100%); }
+  </style>
+</head>
+<body class="bg-[#f0f4f8] text-slate-800 min-h-screen font-sans">
+
+<nav class="biotech-gradient p-4 border-b-2 border-[#00d1b2] flex justify-between items-center sticky top-0 z-50 shadow-lg">
+  <div class="flex items-center gap-4">
+    <h1 class="text-xl font-bold text-white tracking-tight">PGP-UK <span class="text-[#00d1b2] font-light">Genomics</span></h1>
+    <div class="bg-[#00d1b2]/20 border border-[#00d1b2]/30 px-3 py-1 rounded text-[10px] font-mono text-[#00d1b2] font-bold">
+      LIVE_DATA: <span id="recordCount">0</span> VARIANTS
+    </div>
+  </div>
+  <div class="flex gap-4">
+    <button onclick="openModal()" id="addVariantBtn" class="bg-[#00d1b2] hover:bg-[#00bfa5] text-[#0a2540] px-4 py-2 rounded text-xs font-bold transition-all shadow-md active:scale-95">
+      New Analysis
+    </button>
+    <select id="userRole" onchange="applyRBAC()" class="bg-[#0a2540] border border-slate-600 rounded px-2 py-1 text-sm text-slate-300 outline-none focus:border-[#00d1b2]">
+      <option value="admin">System Admin</option>
+      <option value="researcher">Clinical Researcher</option>
+    </select>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+  <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white p-6 rounded-lg border-l-4 border-[#00d1b2] shadow-sm">
+      <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Variant Registry</span>
+      <span id="stat-total" class="text-3xl font-light text-slate-700 block mt-1">0</span>
+    </div>
+    <div class="bg-white p-6 rounded-lg border-l-4 border-[#ff6b6b] shadow-sm">
+      <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">High Pathogenicity</span>
+      <span id="stat-high" class="text-3xl font-light text-slate-700 block mt-1">0</span>
+    </div>
+    <div class="bg-white p-6 rounded-lg border-l-4 border-[#3298dc] shadow-sm">
+      <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Unique Cohorts</span>
+      <span id="stat-unique" class="text-3xl font-light text-slate-700 block mt-1">0</span>
+    </div>
+  </div>
+
+  <div class="lg:col-span-4 space-y-6">
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+      <h3 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-widest">Ancestry Distribution</h3>
+      <canvas id="ancestryChart"></canvas>
+    </div>
+
+    <div class="bg-[#0a2540] p-4 rounded-lg shadow-inner">
+      <h2 class="text-[#00d1b2] text-[10px] font-bold uppercase mb-2 tracking-widest">Terminal Audit</h2>
+      <div id="auditLog" class="font-mono text-[10px] text-slate-300 space-y-1 h-56 overflow-y-auto scrollbar-hide"></div>
+    </div>
+  </div>
+
+  <div class="lg:col-span-8 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+    <div class="p-4 bg-slate-50 border-b border-slate-200">
+      <input type="text" id="searchBar" onkeyup="filterTable()" placeholder="Search by Gene ID or rsID..."
+             class="w-full bg-white border border-slate-300 rounded px-4 py-2 text-sm focus:ring-2 focus:ring-[#00d1b2]/50 outline-none transition-all">
+    </div>
+    <div class="overflow-y-auto h-[520px]">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-800 sticky top-0 z-10 text-slate-300 uppercase text-[10px] tracking-wider">
+        <tr>
+          <th class="p-4">Locus/Gene</th>
+          <th class="p-4">Marker (rsID)</th>
+          <th class="p-4">Population</th>
+          <th class="p-4 text-right">Sequence Tools</th>
+        </tr>
+        </thead>
+        <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[100]">
+  <div class="bg-white p-8 rounded-lg border-t-4 border-[#00d1b2] w-[400px] shadow-2xl">
+    <h2 id="modalTitle" class="text-lg font-bold mb-6 text-slate-800">Variant Configuration</h2>
+    <div class="space-y-4">
+      <input type="hidden" id="editIndex">
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Gene Symbol</label>
+        <input type="text" id="geneInput" class="w-full border border-slate-200 rounded p-2 outline-none focus:border-[#00d1b2] font-semibold">
+      </div>
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Reference SNP ID</label>
+        <input type="text" id="rsidInput" class="w-full border border-slate-200 rounded p-2 outline-none focus:border-[#00d1b2] font-mono">
+      </div>
+      <div>
+        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Ancestry Background</label>
+        <select id="ancestryInput" class="w-full border border-slate-200 rounded p-2 outline-none focus:border-[#00d1b2]">
+          <option value="European">European (EUR)</option>
+          <option value="African">African (AFR)</option>
+          <option value="South Asian">South Asian (SAS)</option>
+          <option value="East Asian">East Asian (EAS)</option>
+          <option value="American">American (AMR)</option>
+        </select>
+      </div>
+    </div>
+    <div class="mt-8 flex justify-end gap-3">
+      <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xs px-4 py-2">Discard</button>
+      <button onclick="saveRecord()" class="bg-[#0a2540] text-[#00d1b2] px-6 py-2 rounded text-xs font-bold hover:bg-[#163e66] transition-colors shadow-lg">Commit Changes</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-8 right-8 bg-[#0a2540] border-l-4 border-[#00d1b2] text-white px-6 py-4 rounded shadow-2xl transform translate-y-32 transition-transform duration-500 z-[200] font-bold text-xs flex items-center gap-4">
+  <div id="toastSpinner" class="w-4 h-4 border-2 border-[#00d1b2] border-t-transparent rounded-full animate-spin"></div>
+  <span id="toastMessage">Synchronizing Database...</span>
+</div>
+
+<script>
+  let fullData = [];
+  let ancestryChart;
+  const colors = { teal: '#00d1b2', navy: '#0a2540', coral: '#ff6b6b', blue: '#3298dc', seafoam: '#5de2a2' };
+
+  async function init() {
+      try {
+          const response = await fetch('cleaned_data.json');
+          fullData = await response.json();
+          updateUI();
+          logAudit("Connection established. Protocol PGP-UK v2.0 active.");
+      } catch (e) {
+          logAudit("CRITICAL: Data stream interrupted.");
+      }
+  }
+
+  function updateUI() {
+      renderTable(fullData);
+      renderChart();
+      updateStats();
+      document.getElementById('recordCount').innerText = fullData.length;
+  }
+
+  function updateStats() {
+      document.getElementById('stat-total').innerText = fullData.length;
+      document.getElementById('stat-high').innerText = fullData.filter(d => d.gene === 'BRCA1').length;
+      const uniqueP = [...new Set(fullData.map(d => d.participant_id))].length;
+      document.getElementById('stat-unique').innerText = uniqueP;
+  }
+
+  function renderTable(dataToDisplay) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = dataToDisplay.map((item, index) => `
+          <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 font-bold text-slate-700">${item.gene}</td>
+              <td class="p-4 text-slate-500 font-mono text-xs">${item.rsid}</td>
+              <td class="p-4"><span class="px-2 py-1 bg-slate-100 rounded text-[10px] text-slate-600 font-bold">${item.ancestry}</span></td>
+              <td class="p-4 text-right space-x-3">
+                  <button onclick="openModal(${index})" class="edit-btn text-[#3298dc] hover:text-[#0a2540] text-[11px] font-bold uppercase tracking-tighter">Modify</button>
+                  <button onclick="deleteRecord(${index})" class="delete-btn text-slate-300 hover:text-[#ff6b6b] text-[11px] font-bold uppercase tracking-tighter">Purge</button>
+              </td>
+          </tr>
+      `).join('');
+      applyRBAC();
+  }
+
+  function renderChart() {
+      const ctx = document.getElementById('ancestryChart').getContext('2d');
+      const counts = fullData.reduce((acc, curr) => {
+          acc[curr.ancestry] = (acc[curr.ancestry] || 0) + 1;
+          return acc;
+      }, {});
+
+      if (ancestryChart) ancestryChart.destroy();
+      ancestryChart = new Chart(ctx, {
+          type: 'polarArea',
+          data: {
+              labels: Object.keys(counts),
+              datasets: [{
+                  data: Object.values(counts),
+                  backgroundColor: [colors.teal, colors.blue, colors.seafoam, colors.navy, colors.coral],
+                  borderWidth: 2,
+                  borderColor: '#ffffff'
+              }]
+          },
+          options: {
+              scales: { r: { grid: { color: '#f0f4f8' }, ticks: { display: false } } },
+              plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } }
+          }
+      });
+  }
+
+  function filterTable() {
+      const query = document.getElementById('searchBar').value.toLowerCase();
+      const filtered = fullData.filter(d => d.gene.toLowerCase().includes(query) || d.rsid.toLowerCase().includes(query));
+      renderTable(filtered);
+  }
+
+  function deleteRecord(index) {
+      fullData.splice(index, 1);
+      updateUI();
+      logAudit("SEC_EVENT: Record deleted by operator.");
+      showToast("Purge Complete");
+  }
+
+  function openModal(index = null) {
+      document.getElementById('modal').classList.remove('hidden');
+      if (index !== null) {
+          const record = fullData[index];
+          document.getElementById('modalTitle').innerText = "Edit Analysis Path";
+          document.getElementById('editIndex').value = index;
+          document.getElementById('geneInput').value = record.gene;
+          document.getElementById('rsidInput').value = record.rsid;
+          document.getElementById('ancestryInput').value = record.ancestry;
+      } else {
+          document.getElementById('modalTitle').innerText = "Register New Pathogen Variant";
+          document.getElementById('editIndex').value = "";
+          document.getElementById('geneInput').value = "";
+          document.getElementById('rsidInput').value = "";
+          document.getElementById('ancestryInput').value = "European";
+      }
+  }
+
+  function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+  function saveRecord() {
+      const idx = document.getElementById('editIndex').value;
+      const entry = {
+          gene: document.getElementById('geneInput').value.toUpperCase(),
+          rsid: document.getElementById('rsidInput').value.toLowerCase(),
+          ancestry: document.getElementById('ancestryInput').value,
+          participant_id: "UK-LAB-SYS"
+      };
+      if (idx === "") fullData.unshift(entry);
+      else fullData[idx] = entry;
+      updateUI();
+      closeModal();
+      showToast("Sequence Data Committed");
+  }
+
+  function applyRBAC() {
+      const isAdmin = document.getElementById('userRole').value === 'admin';
+      document.getElementById('addVariantBtn').style.display = isAdmin ? 'block' : 'none';
+      document.querySelectorAll('.edit-btn, .delete-btn').forEach(e => e.style.display = isAdmin ? 'inline-block' : 'none');
+  }
+
+  function logAudit(msg) {
+      const log = document.getElementById('auditLog');
+      log.innerHTML += `<div><span class="text-[#00d1b2] font-bold">>></span> ${msg}</div>`;
+      log.scrollTop = log.scrollHeight;
+  }
+
+  function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').innerText = message;
+      toast.classList.remove('translate-y-32');
+      setTimeout(() => toast.classList.add('translate-y-32'), 3000);
+  }
+
+
+
+
+  window.onload = init;
+</script>
+</body>
+</html>

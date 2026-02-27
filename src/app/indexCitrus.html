@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGP-UK Genomic Analytics Portal | Citrus Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #EAE4DD; }
+        ::-webkit-scrollbar-thumb { background: #A4C615; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-[#EAE4DD] text-gray-800 min-h-screen font-sans transition-colors duration-500">
+
+<nav class="bg-white p-4 border-b-4 border-[#FF812D] flex justify-between items-center sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center gap-4">
+        <h1 class="text-xl font-black text-[#FF812D] tracking-tighter italic">PGP-UK <span class="text-[#4A771E]">DASHBOARD</span></h1>
+        <div class="bg-[#A4C615] px-3 py-1 rounded-full text-[10px] font-mono text-white font-bold shadow-sm">
+            LOADED: <span id="recordCount">0</span> VARIANTS
+        </div>
+    </div>
+    <div class="flex gap-4">
+        <button onclick="openModal()" id="addVariantBtn" class="bg-[#F9748F] hover:bg-[#D94F6B] text-white px-4 py-2 rounded-lg text-xs font-black transition-all shadow-md active:scale-95">
+            + Add Variant
+        </button>
+        <select id="userRole" onchange="applyRBAC()" class="bg-white border-2 border-[#EAE4DD] rounded-lg px-2 py-1 text-sm text-[#4A771E] font-bold outline-none focus:border-[#A4C615]">
+            <option value="admin">Admin (Full Access)</option>
+            <option value="researcher">Researcher (Read Only)</option>
+        </select>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-6 rounded-2xl border-b-4 border-[#F9748F] flex flex-col justify-center items-center shadow-sm">
+            <span class="text-gray-400 text-[10px] uppercase font-black tracking-widest">Total Variants</span>
+            <span id="stat-total" class="text-4xl font-black text-[#F9748F]">0</span>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border-b-4 border-[#FF812D] flex flex-col justify-center items-center shadow-sm">
+            <span class="text-gray-400 text-[10px] uppercase font-black tracking-widest">High Impact (BRCA1)</span>
+            <span id="stat-high" class="text-4xl font-black text-[#FF812D]">0</span>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border-b-4 border-[#A4C615] flex flex-col justify-center items-center shadow-sm">
+            <span class="text-gray-400 text-[10px] uppercase font-black tracking-widest">Unique Participants</span>
+            <span id="stat-unique" class="text-4xl font-black text-[#A4C615]">0</span>
+        </div>
+    </div>
+
+    <div class="lg:col-span-4 space-y-6">
+        <div class="bg-white p-6 rounded-2xl border-2 border-white shadow-sm">
+            <h3 class="text-xs font-black text-[#4A771E] uppercase mb-4 text-center tracking-widest">Ancestry Admixture</h3>
+            <canvas id="ancestryChart"></canvas>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border-2 border-white shadow-sm">
+            <h2 class="text-[#F9748F] text-[10px] font-black uppercase mb-2 tracking-widest">System Audit Log</h2>
+            <div id="auditLog" class="bg-[#EAE4DD]/30 p-4 rounded-xl h-64 flex flex-col font-mono text-[11px] text-gray-600 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-8 bg-white rounded-2xl border-2 border-white shadow-xl overflow-hidden">
+        <div class="p-4 bg-white border-b border-[#EAE4DD] flex items-center gap-3">
+            <input type="text" id="searchBar" onkeyup="filterTable()" placeholder="Search variants by gene or rsID..."
+                   class="w-full bg-[#EAE4DD]/30 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 text-sm focus:border-[#FF812D] outline-none transition-all placeholder:text-gray-400">
+        </div>
+        <div class="overflow-y-auto h-[500px]">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-[#4A771E] sticky top-0 z-10 text-white uppercase text-[10px] font-black tracking-widest">
+                <tr>
+                    <th class="p-4">Gene</th>
+                    <th class="p-4">rsID</th>
+                    <th class="p-4">Ancestry</th>
+                    <th class="p-4 text-right">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-[#EAE4DD]"></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div id="modal" class="fixed inset-0 bg-[#4A771E]/20 backdrop-blur-sm hidden flex items-center justify-center z-[100]">
+    <div class="bg-white p-8 rounded-3xl border-4 border-[#FF812D] w-96 shadow-2xl transform transition-all">
+        <h2 id="modalTitle" class="text-xl font-black mb-6 text-[#FF812D] uppercase italic">Update Record</h2>
+        <div class="space-y-4">
+            <input type="hidden" id="editIndex">
+            <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase">Gene Symbol</label>
+                <input type="text" id="geneInput" class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#F9748F] font-bold">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase">rsID</label>
+                <input type="text" id="rsidInput" class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#F9748F] font-mono">
+            </div>
+            <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase">Ancestry</label>
+                <select id="ancestryInput" class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#A4C615] font-bold text-[#4A771E]">
+                    <option value="European">European</option>
+                    <option value="African">African</option>
+                    <option value="South Asian">South Asian</option>
+                    <option value="East Asian">East Asian</option>
+                    <option value="American">American</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-8 flex justify-end gap-3">
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xs px-4 py-2">Cancel</button>
+            <button onclick="saveRecord()" class="bg-[#A4C615] hover:bg-[#8ba812] text-white px-8 py-2 rounded-xl text-xs font-black shadow-lg transition-transform active:scale-95">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="fixed bottom-5 right-5 bg-[#4A771E] text-white px-6 py-4 rounded-2xl shadow-2xl transform translate-y-32 transition-transform duration-500 z-[200] font-black text-xs uppercase tracking-widest flex items-center gap-3">
+    <span class="bg-white/20 p-1 rounded-full text-lg">🍊</span>
+    <span id="toastMessage">Record Saved Successfully!</span>
+</div>
+
+<script>
+    let fullData = [];
+    let ancestryChart;
+
+    // Palette mapping from the image
+    const palette = {
+        pink: '#F9748F',
+        orange: '#FF812D',
+        yellow: '#FFCB32',
+        lime: '#A4C615',
+        forest: '#4A771E',
+        cream: '#EAE4DD'
+    };
+
+    async function init() {
+        try {
+            const response = await fetch('cleaned_data.json');
+            fullData = await response.json();
+            updateUI();
+            logAudit("System online. Citrus palette applied.");
+        } catch (e) {
+            logAudit("CRITICAL: Failed to load data source.");
+        }
+    }
+
+    function updateUI() {
+        renderTable(fullData);
+        renderChart();
+        updateStats();
+        document.getElementById('recordCount').innerText = fullData.length;
+    }
+
+    function updateStats() {
+        document.getElementById('stat-total').innerText = fullData.length;
+        document.getElementById('stat-high').innerText = fullData.filter(d => d.gene === 'BRCA1').length;
+        const uniqueP = [...new Set(fullData.map(d => d.participant_id))].length;
+        document.getElementById('stat-unique').innerText = uniqueP;
+    }
+
+    function renderTable(dataToDisplay) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = dataToDisplay.map((item, index) => `
+            <tr class="hover:bg-[#FFCB32]/10 transition-colors group">
+                <td class="p-4 font-black text-[#F9748F]">${item.gene}</td>
+                <td class="p-4 text-gray-500 font-mono text-xs">${item.rsid}</td>
+                <td class="p-4">
+                    <span class="bg-[#EAE4DD] text-[#4A771E] px-2 py-1 rounded-lg text-[10px] font-black border border-white">
+                        ${item.ancestry}
+                    </span>
+                </td>
+                <td class="p-4 text-right space-x-3">
+                    <button onclick="openModal(${index})" class="edit-btn text-[#FF812D] hover:underline text-xs font-black uppercase tracking-tighter">Edit</button>
+                    <button onclick="deleteRecord(${index})" class="delete-btn text-gray-300 hover:text-red-500 text-xs font-black uppercase tracking-tighter">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+        applyRBAC();
+    }
+
+    function renderChart() {
+        const ctx = document.getElementById('ancestryChart').getContext('2d');
+        const counts = fullData.reduce((acc, curr) => {
+            acc[curr.ancestry] = (acc[curr.ancestry] || 0) + 1;
+            return acc;
+        }, {});
+
+        if (ancestryChart) ancestryChart.destroy();
+        ancestryChart = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts),
+                    backgroundColor: [palette.pink, palette.orange, palette.yellow, palette.lime, palette.forest],
+                    borderWidth: 4,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                scales: { r: { grid: { color: palette.cream }, ticks: { display: false } } },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: palette.forest, font: { weight: 'bold', size: 10 } }
+                    }
+                }
+            }
+        });
+    }
+
+    function filterTable() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const filtered = fullData.filter(d => d.gene.toLowerCase().includes(query) || d.rsid.toLowerCase().includes(query));
+        renderTable(filtered);
+    }
+
+    function deleteRecord(index) {
+        const rsid = fullData[index].rsid;
+        fullData.splice(index, 1);
+        updateUI();
+        logAudit(`DELETED: Variant ${rsid} removed.`);
+        showToast("Entry Permanently Deleted", true);
+    }
+
+    function openModal(index = null) {
+        const modal = document.getElementById('modal');
+        modal.classList.remove('hidden');
+
+        if (index !== null) {
+            const record = fullData[index];
+            document.getElementById('modalTitle').innerText = "Update Variant";
+            document.getElementById('editIndex').value = index;
+            document.getElementById('geneInput').value = record.gene;
+            document.getElementById('rsidInput').value = record.rsid;
+            document.getElementById('ancestryInput').value = record.ancestry;
+            logAudit(`MODAL: Editing ${record.rsid}`);
+        } else {
+            document.getElementById('modalTitle').innerText = "New Variant";
+            document.getElementById('editIndex').value = "";
+            document.getElementById('geneInput').value = "";
+            document.getElementById('rsidInput').value = "";
+            document.getElementById('ancestryInput').value = "European";
+            logAudit("MODAL: Creating new entry.");
+        }
+    }
+
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+    function saveRecord() {
+        const idx = document.getElementById('editIndex').value;
+        const gene = document.getElementById('geneInput').value;
+        const rsid = document.getElementById('rsidInput').value;
+        const ancestry = document.getElementById('ancestryInput').value;
+
+        if (!gene || !rsid) {
+            showToast("Validation Error: Empty Fields", true);
+            return;
+        }
+
+        const entry = { gene: gene.toUpperCase(), rsid: rsid.toLowerCase(), ancestry: ancestry, participant_id: "UK-USER" };
+
+        if (idx === "") {
+            fullData.unshift(entry);
+            logAudit(`SUCCESS: Created ${rsid}`);
+        } else {
+            fullData[idx] = entry;
+            logAudit(`SUCCESS: Updated ${rsid}`);
+        }
+
+        updateUI();
+        closeModal();
+        showToast("Data Synced Successfully!");
+    }
+
+    function applyRBAC() {
+        const isAdmin = document.getElementById('userRole').value === 'admin';
+        document.getElementById('addVariantBtn').style.display = isAdmin ? 'block' : 'none';
+        document.querySelectorAll('.edit-btn, .delete-btn').forEach(e => e.style.display = isAdmin ? 'inline-block' : 'none');
+    }
+
+    function logAudit(msg) {
+        const log = document.getElementById('auditLog');
+        log.innerHTML += `<div class="border-l-2 border-[#A4C615] pl-2 mb-1">
+            <span class="text-[#4A771E] font-bold">[${new Date().toLocaleTimeString()}]</span> ${msg}
+        </div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMessage');
+        toastMsg.innerText = message;
+        toast.style.backgroundColor = isError ? palette.pink : palette.forest;
+        toast.classList.remove('translate-y-32');
+        setTimeout(() => toast.classList.add('translate-y-32'), 3000);
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
