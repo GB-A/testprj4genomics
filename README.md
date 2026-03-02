@@ -7,7 +7,7 @@
 
 ## 🎯 Project Overview
 
-This repository contains a **production-ready test automation framework** for the **PGP-UK Genomic Portal** – a clinical-grade web application designed for genomic data analysis and variant management at Genomics England. The framework demonstrates enterprise-level QA practices including BDD (Behavior-Driven Development), data-driven testing, role-based access control validation, and comprehensive test reporting.
+This repository contains a **production-ready test automation framework** for the **PGP-UK Genomic Portal** – a clinical-grade web application designed for genomic data analysis and variant management as a portfolio project for genomics. The framework demonstrates enterprise-level QA practices including BDD (Behavior-Driven Development), data-driven testing, role-based access control validation, and comprehensive test reporting.
 
 ### Key Features
 - ✅ **Behavior-Driven Testing** using Gherkin feature files and Cucumber
