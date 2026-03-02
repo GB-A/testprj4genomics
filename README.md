@@ -3,11 +3,11 @@
 > A comprehensive test automation framework for the Portfolio app -- PGP-UK Genomic Portal using **Playwright**, **Cucumber**, **Gherkin**, and **Maven**.
 
 ---
-test
+
 
 ## 🎯 Project Overview
 
-This repository contains a **production-ready test automation framework** for the **PGP-UK Genomic Portal** – a clinical-grade web application designed for genomic data analysis and variant management at Genomics England. The framework demonstrates enterprise-level QA practices including BDD (Behavior-Driven Development), data-driven testing, role-based access control validation, and comprehensive test reporting.
+This repository contains a **production-ready test automation framework** for the **PGP-UK Genomic Portal** – a clinical-grade web application designed for genomic data analysis and variant management , a portfolio application for genomics. The framework demonstrates enterprise-level QA practices including BDD (Behavior-Driven Development), data-driven testing, role-based access control validation, and comprehensive test reporting.
 
 ### Key Features
 - ✅ **Behavior-Driven Testing** using Gherkin feature files and Cucumber
@@ -50,6 +50,168 @@ This repository contains a **production-ready test automation framework** for th
 - **Git**
 - Local web server (for running the genomic portal app)
 
+### 🛠️ Technology Stack
+
+| Component | Technology | Version | Purpose |
+|-----------|-----------|---------|---------|
+| **Language** | Java | 25 | Test automation language |
+| **Build Tool** | Apache Maven | 3.9+ | Dependency management & build orchestration |
+| **Test Framework** | JUnit 5 (Jupiter) | 5.10.2 | Test execution & assertion framework |
+| **BDD Framework** | Cucumber | 7.15.0 | Gherkin scenario execution |
+| **Browser Automation** | Playwright | 1.58.0 | Cross-browser UI automation |
+| **Test Runner** | JUnit Platform Suite | 1.10.2 | Test aggregation & execution |
+| **Logging** | Log4j 2 | 2.25.3 | Application & test logging |
+| **Reporting** | Cucumber HTML Reports | Built-in | HTML test reports |
+| **Style/Linting** | Checkstyle (Google Java Style) |
+
+
+---
+
+
+## 🔄 Data Cleaning Process
+
+This project includes an **ETL (Extract, Transform, Load) pipeline** that demonstrates data validation and quality assurance best practices critical for genomic data management.
+
+### Data Pipeline Overview
+
+```
+Raw Data Generation → Data Validation → Data Cleanup → Clean Export
+    (1000 rows)         (Audit)           (Inner Join)    (949 rows)
+```
+
+### Step 1: Sample Raw Data Generation
+
+**File**: `src/data/datageneration.py`
+
+```python
+def create_raw_files():
+    # 1. Participant Table (Primary Key Source)
+    participants = pd.DataFrame({
+        'participant_id': ['uk1', 'uk2', 'uk3'],
+        'ancestry': ['European', 'African', 'South Asian'],
+        'blood_type': ['O+', 'A-', 'B+']
+    })
+
+    # 2. Variant Table (with intentional errors)
+    # Total: 1000 rows
+    # - 949 valid records (uk1, uk2, uk3 references)
+    # - 51 orphan records (uk_ORPHAN references - invalid ForeignKeys)
+    variants = pd.DataFrame({
+        'variant_id': range(1, 1001),
+        'participant_id': (['uk1', 'uk2', 'uk3'] * 316 + ['uk1']) + (['uk_ORPHAN'] * 51),
+        'rsid': [f'rs{1000 + i}' for i in range(1000)],
+        'gene': ['HERC2', 'ABO', 'BRCA1', 'APOE'] * 250
+    })
+
+    # Save to CSV
+    participants.to_csv('raw/participants.csv', index=False)
+    variants.to_csv('raw/variants_raw.csv', index=False)
+```
+
+**Test Data Characteristics**:
+- ✅ **Participant Records**: 3 entries with ancestry data
+- ✅ **Variant Records**: 1000 total entries
+- ✅ **Valid Records**: 949 rows with valid Foreign Key references
+- ✅ **Orphan Records**: 51 rows with invalid `participant_id` (uk_ORPHAN)
+- ⚠️ **Intentional Data Quality Issue**: Demonstrates data validation patterns
+
+**QA Validation Points**:
+- Count total records in raw file (1000)
+- Identify orphan records (51 with uk_ORPHAN)
+- Verify participant_id references exist
+
+---
+
+### Step 2: Data Validation & Error Identification
+
+**File**: `src/data/dataCleanup.py`
+
+```python
+def process_and_clean():
+    # 1. Load Raw Data
+    try:
+        participants = pd.read_csv('raw/participants.csv')
+        variants = pd.read_csv('raw/variants_raw.csv')
+    except FileNotFoundError:
+        print("❌ Error: Raw files not found.")
+        return
+
+    # 2. Identify Errors (Lead QA Reporting)
+    orphans = variants[~variants['participant_id'].isin(participants['participant_id'])]
+    print(f"🔍 Audit: Found {len(orphans)} rows with invalid Foreign Keys.")
+    # Expected output: 🔍 Audit: Found 51 rows with invalid Foreign Keys.
+
+    # 3. Clean & Join (Inner Join drops orphans)
+    # Only keeps records where participant_id exists in participants table
+    cleaned_df = pd.merge(variants, participants, on='participant_id', how='inner')
+
+    # 4. Final Validation
+    expected_count = 949
+    if len(cleaned_df) == expected_count:
+        print(f"✅ Validation Passed: {len(cleaned_df)} clean records ready.")
+    else:
+        print(f"⚠️ Warning: Row count is {len(cleaned_df)}, expected {expected_count}.")
+```
+
+**QA Test Steps**:
+- ✅ Read variants_raw.csv and participants.csv
+- ✅ Execute query to find orphan records (participant_id not in participants table)
+- ✅ Expected orphans: 51 rows
+- ✅ Perform INNER JOIN on participant_id
+- ✅ Verify result set has exactly 949 rows
+- ✅ Validate no orphan records in cleaned dataset
+
+**Test Data Validation Script**:
+```java
+// Example: How QA would validate data cleanup
+@Test
+public void validateDataCleanupProcess() {
+    // Load raw data
+    int rawVariantCount = 1000;
+    int rawOrphanCount = 51;
+
+    // After cleanup
+    int cleanedRecordCount = 949;
+
+    // Assertion
+    assertEquals(rawVariantCount - rawOrphanCount, cleanedRecordCount,
+        "Data cleanup should remove exactly 51 orphan records");
+}
+```
+
+---
+
+### Step 3: Data Export for Web Application
+
+```python
+# Export cleaned data as JSON for the web portal
+if not os.path.exists('../app'): os.makedirs('../app')
+
+cleaned_df.to_json('../app/cleaned_data.json', orient='records', indent=2)
+print(f"✅ Exported {len(cleaned_df)} clean records to cleaned_data.json")
+```
+
+**Output**: `src/app/cleaned_data.json`
+```json
+[
+  {
+    "variant_id": 1,
+    "participant_id": "uk1",
+    "rsid": "rs1001",
+    "gene": "HERC2",
+    "ancestry": "European",
+    "blood_type": "O+"
+  },
+  ...
+]
+```
+
+**QA Quality Metrics**:
+- ✅ **Orphan Detection Rate**: 51/1000 = 5.1% error rate identified
+- ✅ **Data Recovery Rate**: 949/1000 = 94.9% valid data retained
+- ✅ **Referential Integrity**: 100% of remaining records have valid FK references
+- ✅ **Audit Trail**: All errors logged and categorized
+
 ### Clone & Setup
 ```bash
 git clone https://github.com/your-repo/testprj4genomics.git
@@ -57,13 +219,6 @@ cd testprj4genomics
 
 # Install dependencies
 mvn clean install
-
-# Run all tests
-mvn test
-
-# Run specific feature file
-mvn test -Dcucumber.filter.tags="@smoke"
-```
 
 ### Start the Application
 ```bash
@@ -74,9 +229,13 @@ cd src/app
 python3 -m http.server 8000
 
 # Application will be available at: http://localhost:8000/index.html
-```
 
----
+# Run all tests
+mvn test
+
+# Run smoke tests only
+mvn test -Dcucumber.filter.tags="@smoke"
+```
 
 ## 🏗️ Project Architecture
 
@@ -297,22 +456,7 @@ Scenario: Ancestry Chart dynamically updates for new populations
 - ✅ Root cause: Frontend does not trigger chart re-initialization on data change
 - ✅ Impact: User may see stale analytics if relying on chart visualization
 
----
 
-## 🛠️ Technology Stack
-
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| **Language** | Java | 25 | Test automation language |
-| **Build Tool** | Apache Maven | 3.9+ | Dependency management & build orchestration |
-| **Test Framework** | JUnit 5 (Jupiter) | 5.10.2 | Test execution & assertion framework |
-| **BDD Framework** | Cucumber | 7.15.0 | Gherkin scenario execution |
-| **Browser Automation** | Playwright | 1.58.0 | Cross-browser UI automation |
-| **Test Runner** | JUnit Platform Suite | 1.10.2 | Test aggregation & execution |
-| **Logging** | Log4j 2 | 2.25.3 | Application & test logging |
-| **Reporting** | Cucumber HTML Reports | Built-in | HTML test reports |
-
----
 
 ## 📦 Installation & Setup
 
@@ -370,150 +514,6 @@ curl http://localhost:8000/index.html
 ```
 
 ---
-
-## 🔄 Data Cleaning Process
-
-This project includes an **ETL (Extract, Transform, Load) pipeline** that demonstrates data validation and quality assurance best practices critical for genomic data management.
-
-### Data Pipeline Overview
-
-```
-Raw Data Generation → Data Validation → Data Cleanup → Clean Export
-    (1000 rows)         (Audit)           (Inner Join)    (949 rows)
-```
-
-### Step 1: Raw Data Generation
-
-**File**: `src/data/datageneration.py`
-
-```python
-def create_raw_files():
-    # 1. Participant Table (Primary Key Source)
-    participants = pd.DataFrame({
-        'participant_id': ['uk1', 'uk2', 'uk3'],
-        'ancestry': ['European', 'African', 'South Asian'],
-        'blood_type': ['O+', 'A-', 'B+']
-    })
-
-    # 2. Variant Table (with intentional errors)
-    # Total: 1000 rows
-    # - 949 valid records (uk1, uk2, uk3 references)
-    # - 51 orphan records (uk_ORPHAN references - invalid ForeignKeys)
-    variants = pd.DataFrame({
-        'variant_id': range(1, 1001),
-        'participant_id': (['uk1', 'uk2', 'uk3'] * 316 + ['uk1']) + (['uk_ORPHAN'] * 51),
-        'rsid': [f'rs{1000 + i}' for i in range(1000)],
-        'gene': ['HERC2', 'ABO', 'BRCA1', 'APOE'] * 250
-    })
-
-    # Save to CSV
-    participants.to_csv('raw/participants.csv', index=False)
-    variants.to_csv('raw/variants_raw.csv', index=False)
-```
-
-**Test Data Characteristics**:
-- ✅ **Participant Records**: 3 entries with ancestry data
-- ✅ **Variant Records**: 1000 total entries
-- ✅ **Valid Records**: 949 rows with valid Foreign Key references
-- ✅ **Orphan Records**: 51 rows with invalid `participant_id` (uk_ORPHAN)
-- ⚠️ **Intentional Data Quality Issue**: Demonstrates data validation patterns
-
-**QA Validation Points**:
-- Count total records in raw file (1000)
-- Identify orphan records (51 with uk_ORPHAN)
-- Verify participant_id references exist
-
----
-
-### Step 2: Data Validation & Error Identification
-
-**File**: `src/data/dataCleanup.py`
-
-```python
-def process_and_clean():
-    # 1. Load Raw Data
-    try:
-        participants = pd.read_csv('raw/participants.csv')
-        variants = pd.read_csv('raw/variants_raw.csv')
-    except FileNotFoundError:
-        print("❌ Error: Raw files not found.")
-        return
-
-    # 2. Identify Errors (Lead QA Reporting)
-    orphans = variants[~variants['participant_id'].isin(participants['participant_id'])]
-    print(f"🔍 Audit: Found {len(orphans)} rows with invalid Foreign Keys.")
-    # Expected output: 🔍 Audit: Found 51 rows with invalid Foreign Keys.
-
-    # 3. Clean & Join (Inner Join drops orphans)
-    # Only keeps records where participant_id exists in participants table
-    cleaned_df = pd.merge(variants, participants, on='participant_id', how='inner')
-
-    # 4. Final Validation
-    expected_count = 949
-    if len(cleaned_df) == expected_count:
-        print(f"✅ Validation Passed: {len(cleaned_df)} clean records ready.")
-    else:
-        print(f"⚠️ Warning: Row count is {len(cleaned_df)}, expected {expected_count}.")
-```
-
-**QA Test Steps**:
-- ✅ Read variants_raw.csv and participants.csv
-- ✅ Execute query to find orphan records (participant_id not in participants table)
-- ✅ Expected orphans: 51 rows
-- ✅ Perform INNER JOIN on participant_id
-- ✅ Verify result set has exactly 949 rows
-- ✅ Validate no orphan records in cleaned dataset
-
-**Test Data Validation Script**:
-```java
-// Example: How QA would validate data cleanup
-@Test
-public void validateDataCleanupProcess() {
-    // Load raw data
-    int rawVariantCount = 1000;
-    int rawOrphanCount = 51;
-
-    // After cleanup
-    int cleanedRecordCount = 949;
-
-    // Assertion
-    assertEquals(rawVariantCount - rawOrphanCount, cleanedRecordCount,
-        "Data cleanup should remove exactly 51 orphan records");
-}
-```
-
----
-
-### Step 3: Data Export for Web Application
-
-```python
-# Export cleaned data as JSON for the web portal
-if not os.path.exists('../app'): os.makedirs('../app')
-
-cleaned_df.to_json('../app/cleaned_data.json', orient='records', indent=2)
-print(f"✅ Exported {len(cleaned_df)} clean records to cleaned_data.json")
-```
-
-**Output**: `src/app/cleaned_data.json`
-```json
-[
-  {
-    "variant_id": 1,
-    "participant_id": "uk1",
-    "rsid": "rs1001",
-    "gene": "HERC2",
-    "ancestry": "European",
-    "blood_type": "O+"
-  },
-  ...
-]
-```
-
-**QA Quality Metrics**:
-- ✅ **Orphan Detection Rate**: 51/1000 = 5.1% error rate identified
-- ✅ **Data Recovery Rate**: 949/1000 = 94.9% valid data retained
-- ✅ **Referential Integrity**: 100% of remaining records have valid FK references
-- ✅ **Audit Trail**: All errors logged and categorized
 
 ---
 
