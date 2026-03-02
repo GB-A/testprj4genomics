@@ -323,43 +323,6 @@ curl http://localhost:8000/index.html
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-- **Java 25+** (JDK)
-- **Maven 3.9+**
-- **Git**
-- Local web server (for running the genomic portal app)
-
-### Clone & Setup
-```bash
-git clone https://github.com/your-repo/genomic-qa-pgp.git
-cd genomic-qa-pgp
-
-# Install dependencies
-mvn clean install
-
-# Run all tests
-mvn test
-
-# Run specific feature file
-mvn test -Dcucumber.filter.tags="@smoke"
-```
-
-### Start the Application
-```bash
-# Navigate to the app directory
-cd src/app
-
-# Start a local web server
-python3 -m http.server 8000
-
-# Application will be available at: http://localhost:8000/index.html
-```
-
----
-
-
 ## 📊 Test Scenarios & Coverage
 
 ### 1. **Access Control (RBAC) Testing**
