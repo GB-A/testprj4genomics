@@ -1,4 +1,4 @@
-![Java CI](https://github.com/GB-A/testprj4genomics/actions/workflows/maven.yml/badge.svg)
+![Java CI](https://github.com/GB-A/testprj4genomics/actions/workflows/test.yml/badge.svg)
 # PGP-UK Genomic Portal - QA Test Automation Suite
 
 > A comprehensive test automation framework for the Portfolio app -- PGP-UK Genomic Portal using **Playwright**, **Cucumber**, **Gherkin**, and **Maven**.
