@@ -1380,10 +1380,10 @@ Users relying on the chart visualization may make decisions based on stale data 
 ### Java CI - Quality & Build — Pipeline Summary
 This pipeline runs on every push and pull request to the main branch and performs two quality gates before any tests run.
 
-## What it does:
-# 1. Validate Code Style (Checkstyle)
+#### What it does:
+#### 1. Validate Code Style (Checkstyle)
 Enforces consistent code formatting across the codebase. Fails the build if any Java file violates the configured style rules — things like indentation, naming conventions, line length and import ordering. This prevents style debates in code reviews and keeps the codebase consistent as the team grows.
-# 2. Compile and Verify Architecture
+#### 2. Compile and Verify Architecture
 Compiles all Java source code to catch syntax errors, missing imports, type mismatches and broken references early. If the code doesn't compile cleanly this step fails immediately, preventing broken code from ever reaching the test stage.
 
 ---
