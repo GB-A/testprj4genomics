@@ -16,11 +16,11 @@
         </div>
     </div>
     <div class="flex gap-4">
-        <button onclick="openModal()" id="addVariantBtn"
-                class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-xs font-bold transition">Add Variant
+        <button class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded text-xs font-bold transition" id="addVariantBtn"
+                onclick="openModal()">Add Variant
         </button>
-        <select id="userRole" onchange="applyRBAC()"
-                class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-cyan-400">
+        <select class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-cyan-400" id="userRole"
+                onchange="applyRBAC()">
             <option value="admin">Admin</option>
             <option value="researcher">Researcher</option>
         </select>
@@ -32,15 +32,15 @@
     <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-center items-center">
             <span class="text-slate-500 text-[10px] uppercase font-bold">Total Variants</span>
-            <span id="stat-total" class="text-2xl font-bold text-indigo-400">0</span>
+            <span class="text-2xl font-bold text-indigo-400" id="stat-total">0</span>
         </div>
         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-center items-center">
             <span class="text-slate-500 text-[10px] uppercase font-bold">High Impact</span>
-            <span id="stat-high" class="text-2xl font-bold text-rose-400">0</span>
+            <span class="text-2xl font-bold text-rose-400" id="stat-high">0</span>
         </div>
         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col justify-center items-center">
             <span class="text-slate-500 text-[10px] uppercase font-bold">Unique Participants</span>
-            <span id="stat-unique" class="text-2xl font-bold text-emerald-400">0</span>
+            <span class="text-2xl font-bold text-emerald-400" id="stat-unique">0</span>
         </div>
     </div>
 
@@ -52,14 +52,14 @@
 
         <div class="bg-black p-4 rounded-xl border border-slate-700">
             <h2 class="text-indigo-500 text-[10px] font-bold uppercase mb-2">Audit Log</h2>
-            <div id="auditLog" class="font-mono text-[10px] text-green-500 space-y-1 h-48 overflow-y-auto"></div>
+            <div class="font-mono text-[10px] text-green-500 space-y-1 h-48 overflow-y-auto" id="auditLog"></div>
         </div>
     </div>
 
     <div class="lg:col-span-8 bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-2xl">
         <div class="p-4 border-b border-slate-700">
-            <input type="text" id="searchBar" onkeyup="filterTable()" placeholder="Filter variants..."
-                   class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 outline-none">
+            <input class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:border-indigo-500 outline-none" id="searchBar" onkeyup="filterTable()" placeholder="Filter variants..."
+                   type="text">
         </div>
         <div class="overflow-y-auto h-[500px]">
             <table class="w-full text-left text-sm">
@@ -77,26 +77,26 @@
     </div>
 </main>
 
-<div id="modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[100]">
+<div class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[100]" id="modal">
     <div class="bg-slate-800 p-8 rounded-xl border border-indigo-500/50 w-96 shadow-2xl">
-        <h2 id="modalTitle" class="text-xl font-bold mb-4 text-indigo-400">Variant Action</h2>
+        <h2 class="text-xl font-bold mb-4 text-indigo-400" id="modalTitle">Variant Action</h2>
         <div class="space-y-4">
-            <input type="hidden" id="editIndex">
-            <input type="text" id="geneInput" placeholder="Gene"
-                   class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none">
-            <input type="text" id="rsidInput" placeholder="rsID"
-                   class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none">
-            <select id="ancestryInput"
-                    class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none">
+            <input id="editIndex" type="hidden">
+            <input class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none" id="geneInput" placeholder="Gene"
+                   type="text">
+            <input class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none" id="rsidInput" placeholder="rsID"
+                   type="text">
+            <select class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 outline-none"
+                    id="ancestryInput">
                 <option value="European">European</option>
                 <option value="African">African</option>
                 <option value="South Asian">South Asian</option>
             </select>
         </div>
         <div class="mt-6 flex justify-end gap-3">
-            <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xs px-4 py-2">Cancel</button>
-            <button onclick="saveRecord()"
-                    class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded text-xs font-bold transition">Save
+            <button class="text-slate-400 hover:text-white text-xs px-4 py-2" onclick="closeModal()">Cancel</button>
+            <button class="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded text-xs font-bold transition"
+                    onclick="saveRecord()">Save
             </button>
         </div>
     </div>
@@ -267,8 +267,8 @@ function openModal(index = null) {
 
     window.onload = init;
 </script>
-<div id="toast"
-     class="fixed bottom-5 right-5 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-2xl transform translate-y-20 transition-transform duration-300 z-[200] font-bold text-sm">
+<div class="fixed bottom-5 right-5 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-2xl transform translate-y-20 transition-transform duration-300 z-[200] font-bold text-sm"
+     id="toast">
     ✅ Record Saved Successfully!
 </div>
 </body>

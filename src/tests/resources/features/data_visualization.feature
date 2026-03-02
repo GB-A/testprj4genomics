@@ -2,6 +2,7 @@ Feature: Analytics Visualization Synchronization
   As a Data Scientist
   I want the charts to accurately reflect the live dataset
   So that my population analysis is based on current data
+
   @known-bug @chart-desync
   Scenario: Ancestry Chart dynamically updates for new populations
     Given the current Ancestry Chart shows 3 distinct populations

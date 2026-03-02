@@ -1,6 +1,7 @@
-import pandas as pd
 import json
 import os
+import pandas as pd
+
 
 def process_and_clean():
     # 1. Load Raw Data
@@ -33,6 +34,7 @@ def process_and_clean():
         json.dump(result, f, indent=4)
 
     print("🚀 Step 2 Complete: 'app/cleaned_data.json' created.")
+
 
 if __name__ == "__main__":
     process_and_clean()

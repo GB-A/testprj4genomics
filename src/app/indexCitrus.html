@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>PGP-UK Genomic Analytics Portal | Citrus Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -17,16 +17,19 @@
 
 <nav class="bg-white p-4 border-b-4 border-[#FF812D] flex justify-between items-center sticky top-0 z-50 shadow-sm">
     <div class="flex items-center gap-4">
-        <h1 class="text-xl font-black text-[#FF812D] tracking-tighter italic">PGP-UK <span class="text-[#4A771E]">DASHBOARD</span></h1>
+        <h1 class="text-xl font-black text-[#FF812D] tracking-tighter italic">PGP-UK <span class="text-[#4A771E]">DASHBOARD</span>
+        </h1>
         <div class="bg-[#A4C615] px-3 py-1 rounded-full text-[10px] font-mono text-white font-bold shadow-sm">
             LOADED: <span id="recordCount">0</span> VARIANTS
         </div>
     </div>
     <div class="flex gap-4">
-        <button onclick="openModal()" id="addVariantBtn" class="bg-[#F9748F] hover:bg-[#D94F6B] text-white px-4 py-2 rounded-lg text-xs font-black transition-all shadow-md active:scale-95">
+        <button class="bg-[#F9748F] hover:bg-[#D94F6B] text-white px-4 py-2 rounded-lg text-xs font-black transition-all shadow-md active:scale-95" id="addVariantBtn"
+                onclick="openModal()">
             + Add Variant
         </button>
-        <select id="userRole" onchange="applyRBAC()" class="bg-white border-2 border-[#EAE4DD] rounded-lg px-2 py-1 text-sm text-[#4A771E] font-bold outline-none focus:border-[#A4C615]">
+        <select class="bg-white border-2 border-[#EAE4DD] rounded-lg px-2 py-1 text-sm text-[#4A771E] font-bold outline-none focus:border-[#A4C615]" id="userRole"
+                onchange="applyRBAC()">
             <option value="admin">Admin (Full Access)</option>
             <option value="researcher">Researcher (Read Only)</option>
         </select>
@@ -38,34 +41,36 @@
     <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white p-6 rounded-2xl border-b-4 border-[#F9748F] flex flex-col justify-center items-center shadow-sm">
             <span class="text-gray-400 text-[10px] uppercase font-black tracking-widest">Total Variants</span>
-            <span id="stat-total" class="text-4xl font-black text-[#F9748F]">0</span>
+            <span class="text-4xl font-black text-[#F9748F]" id="stat-total">0</span>
         </div>
         <div class="bg-white p-6 rounded-2xl border-b-4 border-[#FF812D] flex flex-col justify-center items-center shadow-sm">
             <span class="text-gray-400 text-[10px] uppercase font-black tracking-widest">High Impact (BRCA1)</span>
-            <span id="stat-high" class="text-4xl font-black text-[#FF812D]">0</span>
+            <span class="text-4xl font-black text-[#FF812D]" id="stat-high">0</span>
         </div>
         <div class="bg-white p-6 rounded-2xl border-b-4 border-[#A4C615] flex flex-col justify-center items-center shadow-sm">
             <span class="text-gray-400 text-[10px] uppercase font-black tracking-widest">Unique Participants</span>
-            <span id="stat-unique" class="text-4xl font-black text-[#A4C615]">0</span>
+            <span class="text-4xl font-black text-[#A4C615]" id="stat-unique">0</span>
         </div>
     </div>
 
     <div class="lg:col-span-4 space-y-6">
         <div class="bg-white p-6 rounded-2xl border-2 border-white shadow-sm">
-            <h3 class="text-xs font-black text-[#4A771E] uppercase mb-4 text-center tracking-widest">Ancestry Admixture</h3>
+            <h3 class="text-xs font-black text-[#4A771E] uppercase mb-4 text-center tracking-widest">Ancestry
+                Admixture</h3>
             <canvas id="ancestryChart"></canvas>
         </div>
 
         <div class="bg-white p-4 rounded-2xl border-2 border-white shadow-sm">
             <h2 class="text-[#F9748F] text-[10px] font-black uppercase mb-2 tracking-widest">System Audit Log</h2>
-            <div id="auditLog" class="bg-[#EAE4DD]/30 p-4 rounded-xl h-64 flex flex-col font-mono text-[11px] text-gray-600 overflow-y-auto"></div>
+            <div class="bg-[#EAE4DD]/30 p-4 rounded-xl h-64 flex flex-col font-mono text-[11px] text-gray-600 overflow-y-auto"
+                 id="auditLog"></div>
         </div>
     </div>
 
     <div class="lg:col-span-8 bg-white rounded-2xl border-2 border-white shadow-xl overflow-hidden">
         <div class="p-4 bg-white border-b border-[#EAE4DD] flex items-center gap-3">
-            <input type="text" id="searchBar" onkeyup="filterTable()" placeholder="Search variants by gene or rsID..."
-                   class="w-full bg-[#EAE4DD]/30 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 text-sm focus:border-[#FF812D] outline-none transition-all placeholder:text-gray-400">
+            <input class="w-full bg-[#EAE4DD]/30 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 text-sm focus:border-[#FF812D] outline-none transition-all placeholder:text-gray-400" id="searchBar" onkeyup="filterTable()" placeholder="Search variants by gene or rsID..."
+                   type="text">
         </div>
         <div class="overflow-y-auto h-[500px]">
             <table class="w-full text-left text-sm">
@@ -77,28 +82,31 @@
                     <th class="p-4 text-right">Actions</th>
                 </tr>
                 </thead>
-                <tbody id="tableBody" class="divide-y divide-[#EAE4DD]"></tbody>
+                <tbody class="divide-y divide-[#EAE4DD]" id="tableBody"></tbody>
             </table>
         </div>
     </div>
 </main>
 
-<div id="modal" class="fixed inset-0 bg-[#4A771E]/20 backdrop-blur-sm hidden flex items-center justify-center z-[100]">
+<div class="fixed inset-0 bg-[#4A771E]/20 backdrop-blur-sm hidden flex items-center justify-center z-[100]" id="modal">
     <div class="bg-white p-8 rounded-3xl border-4 border-[#FF812D] w-96 shadow-2xl transform transition-all">
-        <h2 id="modalTitle" class="text-xl font-black mb-6 text-[#FF812D] uppercase italic">Update Record</h2>
+        <h2 class="text-xl font-black mb-6 text-[#FF812D] uppercase italic" id="modalTitle">Update Record</h2>
         <div class="space-y-4">
-            <input type="hidden" id="editIndex">
+            <input id="editIndex" type="hidden">
             <div>
                 <label class="text-[10px] font-black text-gray-400 uppercase">Gene Symbol</label>
-                <input type="text" id="geneInput" class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#F9748F] font-bold">
+                <input class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#F9748F] font-bold" id="geneInput"
+                       type="text">
             </div>
             <div>
                 <label class="text-[10px] font-black text-gray-400 uppercase">rsID</label>
-                <input type="text" id="rsidInput" class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#F9748F] font-mono">
+                <input class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#F9748F] font-mono" id="rsidInput"
+                       type="text">
             </div>
             <div>
                 <label class="text-[10px] font-black text-gray-400 uppercase">Ancestry</label>
-                <select id="ancestryInput" class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#A4C615] font-bold text-[#4A771E]">
+                <select class="w-full bg-[#EAE4DD]/50 border-2 border-[#EAE4DD] rounded-xl px-4 py-2 outline-none focus:border-[#A4C615] font-bold text-[#4A771E]"
+                        id="ancestryInput">
                     <option value="European">European</option>
                     <option value="African">African</option>
                     <option value="South Asian">South Asian</option>
@@ -108,13 +116,19 @@
             </div>
         </div>
         <div class="mt-8 flex justify-end gap-3">
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xs px-4 py-2">Cancel</button>
-            <button onclick="saveRecord()" class="bg-[#A4C615] hover:bg-[#8ba812] text-white px-8 py-2 rounded-xl text-xs font-black shadow-lg transition-transform active:scale-95">Save Changes</button>
+            <button class="text-gray-400 hover:text-gray-600 font-bold text-xs px-4 py-2" onclick="closeModal()">
+                Cancel
+            </button>
+            <button class="bg-[#A4C615] hover:bg-[#8ba812] text-white px-8 py-2 rounded-xl text-xs font-black shadow-lg transition-transform active:scale-95"
+                    onclick="saveRecord()">
+                Save Changes
+            </button>
         </div>
     </div>
 </div>
 
-<div id="toast" class="fixed bottom-5 right-5 bg-[#4A771E] text-white px-6 py-4 rounded-2xl shadow-2xl transform translate-y-32 transition-transform duration-500 z-[200] font-black text-xs uppercase tracking-widest flex items-center gap-3">
+<div class="fixed bottom-5 right-5 bg-[#4A771E] text-white px-6 py-4 rounded-2xl shadow-2xl transform translate-y-32 transition-transform duration-500 z-[200] font-black text-xs uppercase tracking-widest flex items-center gap-3"
+     id="toast">
     <span class="bg-white/20 p-1 rounded-full text-lg">🍊</span>
     <span id="toastMessage">Record Saved Successfully!</span>
 </div>

@@ -12,8 +12,8 @@ Feature: Genomic Variant Management
   Scenario: Add a new clinical variant
     Given I am an authorized Admin
     When I register a new variant with:
-      | Gene | rsID       | Ancestry |
-      | VDR  | rs1544410  | African  |
+      | Gene | rsID      | Ancestry |
+      | VDR  | rs1544410 | African  |
     Then the first row in the table should show:
       | Gene | rsID      | Ancestry |
       | VDR  | rs1544410 | African  |

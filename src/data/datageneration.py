@@ -1,5 +1,6 @@
-import pandas as pd
 import os
+import pandas as pd
+
 
 def create_raw_files():
     if not os.path.exists('raw'):
@@ -27,6 +28,7 @@ def create_raw_files():
 
     print("📂 Step 1 Complete: Raw CSVs generated in src/data/raw/")
     print(f"⚠️ Note: variants_raw.csv contains 51 'uk_ORPHAN' records.")
+
 
 if __name__ == "__main__":
     create_raw_files()
