@@ -3,7 +3,7 @@
 > A comprehensive test automation framework for the Portfolio app -- PGP-UK Genomic Portal using **Playwright**, **Cucumber**, **Gherkin**, and **Maven**.
 
 ---
-test
+
 
 ## 🎯 Project Overview
 
@@ -19,6 +19,9 @@ This repository contains a **production-ready test automation framework** for th
 - ✅ **Maven-Based CI/CD Integration** with plugin orchestration
 - ✅ **Configuration Management** for multi-environment deployments (Dev, Staging, Prod)
 - ✅ **Comprehensive HTML Reports** with Cucumber reporting
+
+  <img width="1889" height="832" alt="image" src="https://github.com/user-attachments/assets/2832d169-f449-4252-8e12-8b2ef1d3aeb8" />
+
 
 ---
 
