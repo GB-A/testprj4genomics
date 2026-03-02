@@ -36,17 +36,17 @@
 <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
   <div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white p-6 rounded-lg border-l-4 border-[#00d1b2] shadow-sm">
-      <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Variant Registry</span>
-      <span id="stat-total" class="text-3xl font-light text-slate-700 block mt-1">0</span>
+    <div data-testid="card-variant-registry" class="bg-white p-6 rounded-lg border-l-4 border-[#00d1b2] shadow-sm">
+      <span data-testid="card-variant-registry-label" class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Variant Registry</span>
+      <span data-testid="card-variant-registry-value" id="stat-total" class="text-3xl font-light text-slate-700 block mt-1">0</span>
     </div>
-    <div class="bg-white p-6 rounded-lg border-l-4 border-[#ff6b6b] shadow-sm">
-      <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">High Pathogenicity</span>
-      <span id="stat-high" class="text-3xl font-light text-slate-700 block mt-1">0</span>
+    <div class="bg-white p-6 rounded-lg border-l-4 border-[#ff6b6b] shadow-sm" data-testid="card-high-pathogenicity">
+      <span data-testid="card-high-pathogenicity-label" class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">High Pathogenicity</span>
+      <span data-testid="card-high-pathogenicity-value" id="stat-high" class="text-3xl font-light text-slate-700 block mt-1">0</span>
     </div>
-    <div class="bg-white p-6 rounded-lg border-l-4 border-[#3298dc] shadow-sm">
-      <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Unique Cohorts</span>
-      <span id="stat-unique" class="text-3xl font-light text-slate-700 block mt-1">0</span>
+    <div data-testid="card-unique-cohorts" class="bg-white p-6 rounded-lg border-l-4 border-[#3298dc] shadow-sm">
+      <span data-testid="card-unique-cohorts-label" class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Unique Cohorts</span>
+      <span data-testid="card-unique-cohorts-value" id="stat-unique" class="text-3xl font-light text-slate-700 block mt-1">0</span>
     </div>
   </div>
 
@@ -188,8 +188,19 @@
               scales: { r: { grid: { color: '#f0f4f8' }, ticks: { display: false } } },
               plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } }
           }
-      });
-  }
+      });  // expose chart data to DOM for Playwright testing
+    updateChartTestAttributes();
+}
+
+function updateChartTestAttributes() {
+    const canvas = document.getElementById('ancestryChart');
+    const labels = Object.keys(fullData.reduce((acc, curr) => {
+        acc[curr.ancestry] = true;
+        return acc;
+    }, {}));
+    canvas.setAttribute('data-segment-count', labels.length);
+    canvas.setAttribute('data-segments', labels.join(','));
+}
 
   function filterTable() {
       const query = document.getElementById('searchBar').value.toLowerCase();
