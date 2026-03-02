@@ -26,19 +26,20 @@ This repository contains a **production-ready test automation framework** for th
 
 1. [Quick Start](#quick-start)
 2. [Project Architecture](#project-architecture)
-3. [Test Scenarios & Coverage](#test-scenarios--coverage)
-4. [Technology Stack](#technology-stack)
-5. [Installation & Setup](#installation--setup)
-6. [Data Cleaning Process](#data-cleaning-process)
-7. [Running Tests](#running-tests)
-8. [Maven Configuration](#maven-configuration)
-9. [Playwright Integration](#playwright-integration)
-10. [Cucumber & Gherkin](#cucumber--gherkin)
-11. [Test Execution & Reporting](#test-execution--reporting)
-12. [Configuration Management](#configuration-management)
-13. [Page Object Model](#page-object-model)
-14. [Known Issues & Bug Tracking](#known-issues--bug-tracking)
-15. [Contributing](#contributing)
+3.  [Technology Stack](#technology-stack)
+4. [Test Scenarios & Coverage](#test-scenarios--coverage)
+5.
+6. [Installation & Setup](#installation--setup)
+7. [Data Cleaning Process](#data-cleaning-process)
+8. [Running Tests](#running-tests)
+9. [Maven Configuration](#maven-configuration)
+10. [Playwright Integration](#playwright-integration)
+11. [Cucumber & Gherkin](#cucumber--gherkin)
+12. [Test Execution & Reporting](#test-execution--reporting)
+13. [Configuration Management](#configuration-management)
+14. [Page Object Model](#page-object-model)
+15. [Known Issues & Bug Tracking](#known-issues--bug-tracking)
+16. [Contributing](#contributing)
 
 ---
 
