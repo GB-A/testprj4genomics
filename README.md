@@ -1,7 +1,6 @@
 # PGP-UK Genomic Portal - QA Test Automation Suite
 
-> **Lead QA Engineer - 1 Year FTC Position**
-> A comprehensive test automation framework for the Genomics England PGP-UK Genomic Portal using **Playwright**, **Cucumber**, **Gherkin**, and **Maven**.
+> A comprehensive test automation framework for the Portfolio app -- PGP-UK Genomic Portal using **Playwright**, **Cucumber**, **Gherkin**, and **Maven**.
 
 ---
 test
