@@ -903,64 +903,7 @@ Feature: Core Dashboard Functionality
 
 ---
 
-## 📸 Screenshots & Visual Documentation
 
-### Capturing Report Screenshots
-
-After running your tests locally, capture screenshots of the HTML report to showcase in this GitHub repo:
-
-```bash
-# 1. Run tests
-mvn test
-
-# 2. Open report in browser
-open target/cucumber-reports/report.html
-
-# 3. Capture screenshots using:
-#    - macOS: Cmd + Shift + 4 (selected area)
-#    - Chrome: DevTools > Capture screenshot
-#    - Firefox: Right-click > Take screenshot
-
-# 4. Save to docs/screenshots/
-mkdir -p docs/screenshots
-# Move/save your screenshot here
-```
-
-### Recommended Screenshots to Capture
-
-1. **Report Summary Page** - Shows overall metrics (Pass/Fail counts, duration)
-2. **Feature Overview** - Displays feature files and their execution status
-3. **Detailed Scenario** - Shows a passed scenario with all step details
-4. **Failed Scenario** - Shows failure with error message and screenshots
-5. **Data Table Visualization** - Shows how DataTables render in report
-
-### Example Directory Structure
-
-```
-genomic-qa-pgp/
-├── docs/
-│   ├── screenshots/
-│   │   ├── 01-report-summary.png
-│   │   ├── 02-feature-overview.png
-│   │   ├── 03-admin-crud-scenario.png
-│   │   ├── 04-smoke-test-scenario.png
-│   │   └── 05-known-bug-scenario.png
-│   └── README.md (with embedded screenshots)
-├── README.md (main project README)
-└── ...
-```
-
-### Embedding Screenshots in README
-
-Once you have screenshots, you can embed them in the README like this:
-
-```markdown
-#### Sample Report Summary
-![Test Report Summary](docs/screenshots/report-summary.png)
-*Figure 1: Cucumber HTML Report - Execution Summary showing 14/14 tests passed*
-```
-
----
 
 ## 📊 Test Execution & Reporting
 
@@ -991,6 +934,8 @@ target/cucumber-reports/report.html
 ### Cucumber HTML Report
 
 **Location**: `target/cucumber-reports/report.html`
+<img width="1613" height="497" alt="image" src="https://github.com/user-attachments/assets/080752c3-c1e9-4bf9-8b68-5bff321bf193" />
+
 
 **Report Contents**:
 - ✅ Test execution summary (Passed, Failed, Skipped)
@@ -1235,61 +1180,59 @@ mvn test -Dheadless=true
 
 POM is a design pattern that encapsulates page elements and actions into reusable objects, promoting maintainability and reducing code duplication.
 
-### GenomeHome Page Object
+# GenomeHome Page Object Summary
 
 **File**: `src/tests/java/com/genomics/functionaltests/pageobjects/GenomeHome.java`
 
-```java
-public class GenomeHome {
-  private final Page page;
+The `GenomeHome` class is a Page Object Model (POM) representing the main dashboard of the genomics application. It encapsulates interactions with the dashboard's UI elements, including statistics cards, the variant registry table, search functionality, and the new analysis modal.
 
-  // Page element locators
-  private final Locator recordCountLabel;
-  private final Locator newAnalysisBtn;
-  private final Locator roleSelector;
+## Key Responsibilities
 
-  // Dashboard metrics
-  private final Locator totalVariantCard;
-  private final Locator highPathogenicityCard;
-  private final Locator uniqueCohortsCard;
+### 1. Initialization
+*   Initializes Playwright `Locator`s for various UI elements such as statistics cards (Total Variants, High Pathogenicity, Unique Cohorts), the search bar, the variant table, and the modal for adding/editing variants.
 
-  // Charts and data display
-  private final Locator ancestryChart;
-  private final Locator auditLog;
-  private final Locator tableRows;
+### 2. Navigation
+*   `navigateTo(String url)`: Navigates the browser to the specified URL.
 
-  // Constructor initializes locators using Aria roles (accessible)
-  public GenomeHome(Page page) {
-    this.page = page;
-    this.newAnalysisBtn = page.getByRole(AriaRole.BUTTON,
-        new Page.GetByRoleOptions().setName("New Analysis"));
-    this.roleSelector = page.locator("#roleSelector");
-    this.tableRows = page.locator("table tbody tr");
-  }
+### 3. Dashboard Statistics
+*   Provides methods to assert the visibility and values of the statistics cards:
+    *   `assertTotalVariantCard`
+    *   `assertHighPathogenicityCard`
+    *   `assertUniqueCohortsCard`
+*   `getRegistryVariantsValue()`: Retrieves the current count of total variants.
 
-  // Business logic methods
-  public void changeUserRole(String roleName) {
-    roleSelector.selectOption(roleName);
-    page.waitForLoadState(LoadState.NETWORKIDLE);
-  }
+### 4. Table Interaction & Validation
+*   `getTableHeaders()`: Retrieves the table headers.
+*   `getTableRowCount()`: Returns the number of rows in the table.
+*   `allRowsContainGene(String gene)`: Verifies if all visible rows contain a specific gene.
+*   `getRowData(int rowIndex)`: Extracts data (Gene, rsID, Ancestry) from a specific row.
+*   `variantExistsInTable(String gene)`: Checks if a variant exists in the table.
+*   `isTheadVisible()`: Checks if the table header is visible.
 
-  public boolean isButtonVisible(String buttonName) {
-    return page.getByRole(AriaRole.BUTTON,
-        new Page.GetByRoleOptions().setName(buttonName))
-        .isVisible();
-  }
+### 5. Search & Filtering
+*   `searchFor(String text)`: Enters text into the search bar to filter the table.
 
-  public void addNewVariant(String gene, String rsId, String ancestry) {
-    newAnalysisBtn.click();
-    page.locator("#geneInput").fill(gene);
-    page.locator("#rsIdInput").fill(rsId);
-    page.locator("#ancestrySelect").selectOption(ancestry);
-    page.getByRole(AriaRole.BUTTON,
-        new Page.GetByRoleOptions().setName("Add Variant"))
-        .click();
-  }
-}
-```
+### 6. User Role Management
+*   `changeUserRole(String role)`: Selects a user role from the dropdown.
+*   `getMyRole()`: Retrieves the currently selected role.
+
+### 7. Variant Management (CRUD)
+*   `createNewVariant(String gene, String rsid, String ancestry)`: Opens the modal and creates a new variant.
+*   `modifyDisplayedRow(String gene, String rsid, String ancestry)`: Modifies the first visible row in the table.
+*   `purgeDisplayedRow()`: Deletes the first visible row in the table.
+
+### 8. UI Element Visibility
+*   `isButtonVisible(String buttonLabel)`: Checks if a button with a specific label is visible.
+*   `allRowsHaveTool(String tool)`: Verifies that a specific tool (e.g., Edit, Purge) is present in every row.
+*   `isToolVisibleInTable(String tool)`: Checks if a tool is visible anywhere in the table.
+
+### 9. Charts & Logs
+*   `getAncestryChart()`: Returns the locator for the ancestry chart.
+*   `getAuditLog()`: Returns the locator for the audit log.
+*   `ancestryChartHasSegment(String ancestry)`: Checks if a specific ancestry segment is present in the chart.
+*   `getAncestryChartSegmentCount()`: Retrieves the number of segments in the ancestry chart.
+*   `getAncestryChartSegments()`: Retrieves the list of segments in the ancestry chart.
+
 
 ### Benefits of POM
 
@@ -1305,9 +1248,9 @@ public class GenomeHome {
 ### POM Best Practices Used
 
 ✅ **Aria Role Selectors** - Accessible element identification
-✅ **Explicit Waits** - Wait for network idle before assertions
-✅ **Business Method Names** - `changeUserRole()`, `addNewVariant()`
-✅ **Locator Encapsulation** - No direct XPath in test steps
+✅ **Explicit Waits** - Wait for network idle before assertions of presence of chart as it takes a while toload the rich graphical elements
+✅ **Business Method Names** - `changeUserRole()`, `addNewVariant()` etc
+✅ **Locator Encapsulation** - No direct XPath in test steps 
 ✅ **Single Responsibility** - Each method does one thing
 
 ---
@@ -1350,11 +1293,6 @@ Users relying on the chart visualization may make decisions based on stale data 
 #### Workaround
 - Manual page refresh updates the chart correctly
 - Data table accurately reflects current dataset
-
-#### Resolution Path
-1. Add event listener for "variant-added" in frontend
-2. Trigger `chart.update()` when new ancestry population detected
-3. Validate chart renders 4+ segments after adding variant
 
 #### Test Status
 - **Tagged**: `@known-bug` `@chart-desync`
@@ -1425,19 +1363,20 @@ Users relying on the chart visualization may make decisions based on stale data 
 - [Maven Documentation](https://maven.apache.org/guides/)
 - [Gherkin Language Reference](https://cucumber.io/docs/gherkin/reference/)
 
-### Genomics Resources
-- [Genomics England](https://www.genomicsengland.co.uk/)
-- [PGP-UK Project](https://www.personalgenomes.org/)
-- [Variant Annotation Guidelines](https://www.ncbi.nlm.nih.gov/pubmed/)
-
-### Testing Best Practices
+  ### Testing Best Practices
 - [BDD Best Practices](https://cucumber.io/docs/bdd/)
 - [Page Object Model Pattern](https://selenium.dev/documentation/test_practices/encouraged/page_object_models/)
 - [Test Data Management](https://www.stickyminds.com/article/test-data-management)
 
+
+### Genomics Resources
+- For understanding project requirements and inspiration [Genomics England](https://www.genomicsengland.co.uk/)
+- for inspiration and api [PGP-UK Project](https://www.personalgenomes.org/)
+- for inspiration [Variant Annotation Guidelines](https://www.ncbi.nlm.nih.gov/pubmed/)
+
+
 ---
 
-## 🎓 Learning Resources for Lead QA Engineer Role
 
 This project demonstrates key competencies for the **Lead QA Engineer** position:
 
@@ -1480,48 +1419,6 @@ This project demonstrates key competencies for the **Lead QA Engineer** position
 
 ---
 
-## 📞 Support & Contact
-
-For questions or issues with this test automation framework:
-
-1. **Check Existing Documentation** - See README sections above
-2. **Review Test Reports** - `target/cucumber-reports/report.html`
-3. **Check Known Issues** - See "Known Issues & Bug Tracking" section
-4. **Review Step Definitions** - Browse `src/tests/java/com/genomics/functionaltests/steps/`
-5. **Check Logs** - `target/logs/test.log`
-
----
-
-## 📄 License
-
-This project is part of the Genomics England PGP-UK initiative.
-
----
-
-## 🎯 Next Steps
-
-### For Quick Start
-1. Clone repository
-2. Run `mvn clean install`
-3. Start web server: `python3 -m http.server 8000` (from `src/app/`)
-4. Run tests: `mvn test`
-5. View reports: Open `target/cucumber-reports/report.html`
-
-### For Advanced Usage
-1. Study the feature files for test scenarios
-2. Review step definitions for implementation patterns
-3. Explore Page Object methods for UI interaction techniques
-4. Check hooks.java for browser lifecycle management
-5. Add new scenarios following the pattern
-
-### For Contributing
-1. Create a feature branch
-2. Write Gherkin scenario first (BDD approach)
-3. Implement step definitions
-4. Run tests locally
-5. Submit pull request with test report
-
----
 
 **Created**: March 2, 2026
 **Framework Version**: 1.0-SNAPSHOT
