@@ -52,8 +52,8 @@ This repository contains a **production-ready test automation framework** for th
 
 ### Clone & Setup
 ```bash
-git clone https://github.com/your-repo/genomic-qa-pgp.git
-cd genomic-qa-pgp
+git clone https://github.com/your-repo/testprj4genomics.git
+cd testprj4genomics
 
 # Install dependencies
 mvn clean install
@@ -81,7 +81,7 @@ python3 -m http.server 8000
 ## 🏗️ Project Architecture
 
 ```
-genomic-qa-pgp/
+testprj4genomics/
 ├── src/
 │   ├── app/                    # Portal application (HTML/CSS/JS)
 │   │   ├── index.html          # Main dashboard UI
@@ -340,8 +340,8 @@ mvn --version
 ### 3. Clone Repository
 
 ```bash
-git clone https://github.com/your-repo/genomic-qa-pgp.git
-cd genomic-qa-pgp
+git clone https://github.com/your-repo/testprj4genomics.git
+cd testprj4genomics
 ```
 
 ### 4. Install Dependencies
@@ -594,7 +594,7 @@ open target/cucumber-reports/report.html
 
 ```xml
 <groupId>com.genomics.qa</groupId>
-<artifactId>genomic-qa-pgp-private</artifactId>
+<artifactId>testprj4genomics-private</artifactId>
 <version>1.0-SNAPSHOT</version>
 
 <properties>
@@ -954,7 +954,7 @@ mkdir -p docs/screenshots
 ### Example Directory Structure
 
 ```
-genomic-qa-pgp/
+testprj4genomics/
 ├── docs/
 │   ├── screenshots/
 │   │   ├── 01-report-summary.png
