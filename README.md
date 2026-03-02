@@ -28,18 +28,17 @@ This repository contains a **production-ready test automation framework** for th
 2. [Technology Stack](#technology-stack)
 3. [Data Cleaning Process](#data-cleaning-process)
 4. [Installation & Setup](#installation--setup)
-5. [Quick Start](#quick-start)
-6. [Test Scenarios & Coverage](#test-scenarios--coverage)
-7.  [Page Object Model](#page-object-model)
-8. [Running Tests](#running-tests)
+5. [Test Scenarios & Coverage](#test-scenarios--coverage)
+6. [Page Object Model](#page-object-model)
+7.  [Running Tests](#running-tests)
+8.  [Playwright Integration](#playwright-integration)
 9. [Maven Configuration](#maven-configuration)
-10. [Playwright Integration](#playwright-integration)
-11. [Cucumber & Gherkin](#cucumber--gherkin)
-12. [Test Execution & Reporting](#test-execution--reporting)
-13.  [Configuration Management](#configuration-management)
-14. [Known Issues & Bug Tracking](#known-issues--bug-tracking)
-15. [Contributing](#contributing)
-    
+10. [Cucumber & Gherkin](#cucumber--gherkin)
+11. [Test Execution & Reporting](#test-execution--reporting)
+12.  [Configuration Management](#configuration-management)
+13. [Known Issues & Bug Tracking](#known-issues--bug-tracking)
+14.  [Contributing](#contributing)
+
 
 ---
 
