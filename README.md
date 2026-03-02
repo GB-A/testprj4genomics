@@ -108,17 +108,21 @@ def create_raw_files():
     variants.to_csv('raw/variants_raw.csv', index=False)
 ```
 
-**Test Data Characteristics**:
-- ✅ **Participant Records**: 3 entries with ancestry data
-- ✅ **Variant Records**: 1000 total entries
-- ✅ **Valid Records**: 949 rows with valid Foreign Key references
-- ✅ **Orphan Records**: 51 rows with invalid `participant_id` (uk_ORPHAN)
-- ⚠️ **Intentional Data Quality Issue**: Demonstrates data validation patterns
+##  Data Generation
+**Script:** `src/data/datageneration.py`
 
-**QA Validation Points**:
-- Count total records in raw file (1000)
-- Identify orphan records (51 with uk_ORPHAN)
-- Verify participant_id references exist
+This script is responsible for creating synthetic raw data for testing purposes.
+
+*   **Output Directory:** `src/data/raw/`
+*   **Generated Files:**
+    *   `participants.csv`: Contains participant demographic information (`participant_id`, `ancestry`, `blood_type`).
+    *   `variants_raw.csv`: Contains genetic variant information (`variant_id`, `participant_id`, `rsid`, `gene`).
+*   **Data Characteristics:**
+    *   The `variants_raw.csv` file is generated with intentional data quality issues.
+    *   It contains **1000 rows** in total.
+    *   **949 rows** are valid and link to existing participants.
+    *   **51 rows** are "orphans" with a `participant_id` of `uk_ORPHAN`, which does not exist in the participants file.
+
 
 ---
 
@@ -153,30 +157,24 @@ def process_and_clean():
         print(f"⚠️ Warning: Row count is {len(cleaned_df)}, expected {expected_count}.")
 ```
 
-**QA Test Steps**:
-- ✅ Read variants_raw.csv and participants.csv
-- ✅ Execute query to find orphan records (participant_id not in participants table)
-- ✅ Expected orphans: 51 rows
-- ✅ Perform INNER JOIN on participant_id
-- ✅ Verify result set has exactly 949 rows
-- ✅ Validate no orphan records in cleaned dataset
+## Data Cleaning
+**Script:** `src/data/dataCleanup.py`
 
-**Test Data Validation Script**:
-```java
-// Example: How QA would validate data cleanup
-@Test
-public void validateDataCleanupProcess() {
-    // Load raw data
-    int rawVariantCount = 1000;
-    int rawOrphanCount = 51;
+This script processes the raw CSV files, cleans the data, and prepares it for the web application.
 
-    // After cleanup
-    int cleanedRecordCount = 949;
+*   **Input:** `src/data/raw/participants.csv` and `src/data/raw/variants_raw.csv`
+*   **Steps:**
+    1.  **Load Raw Data:** Reads the CSV files into pandas DataFrames.
+    2.  **Identify Errors:** Audits the data to find orphan records (variants with no matching participant).
+    3.  **Clean & Join:** Performs an **inner join** between the variants and participants tables on `participant_id`. This automatically removes the orphan records.
+    4.  **Validation:** Verifies that the cleaned dataset contains the expected number of records (949).
+    5.  **Export:** Saves the cleaned and merged data as a JSON file.
+*   **Output:** `src/app/cleaned_data.json`
 
-    // Assertion
-    assertEquals(rawVariantCount - rawOrphanCount, cleanedRecordCount,
-        "Data cleanup should remove exactly 51 orphan records");
-}
+## Data Flow Summary
+1.  Run `src/data/datageneration.py` to create raw CSVs.
+2.  Run `src/data/dataCleanup.py` to process the CSVs and generate the JSON file.
+3.  The web application (`src/app/`) consumes `cleaned_data.json`.
 ```
 
 ---
