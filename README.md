@@ -41,7 +41,7 @@ This repository contains a **production-ready test automation framework** for th
 11. [Test Execution & Reporting](#test-execution--reporting)
 12.  [Configuration Management](#configuration-management)
 13. [Known Issues & Bug Tracking](#known-issues--bug-tracking)
-14.  [Contributing](#contributing)
+14. [GitHub Action/JavaCI- Quality & Build — Pipeline ](#JavaCI-Quality-Build—Pipeline)
 
 
 ---
@@ -1377,46 +1377,14 @@ Users relying on the chart visualization may make decisions based on stale data 
 
 
 ---
+### Java CI - Quality & Build — Pipeline Summary
+This pipeline runs on every push and pull request to the main branch and performs two quality gates before any tests run.
 
-
-This project demonstrates key competencies for the **Lead QA Engineer** position:
-
-### 1. **Test Automation Architecture**
-- ✅ Page Object Model design pattern
-- ✅ Data-driven testing with Cucumber
-- ✅ Reusable test components and libraries
-- ✅ Scalable framework for enterprise applications
-
-### 2. **Behavior-Driven Development (BDD)**
-- ✅ Gherkin scenario writing for business alignment
-- ✅ Cucumber test execution and reporting
-- ✅ Collaboration between QA, Dev, and Business teams
-- ✅ Living documentation through feature files
-
-### 3. **Data Quality Assurance**
-- ✅ ETL pipeline validation
-- ✅ Data integrity and referential constraint checking
-- ✅ Orphan record detection and audit logging
-- ✅ Data cleanup and transformation workflows
-
-### 4. **Test Strategy & Planning**
-- ✅ Feature-based test coverage
-- ✅ Risk-based test prioritization (smoke → regression → advanced)
-- ✅ Environment-specific testing (Dev → Staging → Prod)
-- ✅ Known issue tracking and documentation
-
-### 5. **Tool Proficiency**
-- ✅ **Playwright** - Modern browser automation
-- ✅ **Cucumber** - BDD framework integration
-- ✅ **Maven** - Build orchestration and CI/CD
-- ✅ **JUnit 5** - Advanced testing annotations and lifecycle
-- ✅ **Log4j 2** - Structured logging for diagnostics
-
-### 6. **Team Leadership Skills** (Demonstrated in Code)
-- ✅ Mentoring through well-documented step definitions
-- ✅ Code reviews via checkstyle and quality gates
-- ✅ Test metrics and reporting for stakeholders
-- ✅ Knowledge sharing through README documentation
+## What it does:
+# 1. Validate Code Style (Checkstyle)
+Enforces consistent code formatting across the codebase. Fails the build if any Java file violates the configured style rules — things like indentation, naming conventions, line length and import ordering. This prevents style debates in code reviews and keeps the codebase consistent as the team grows.
+# 2. Compile and Verify Architecture
+Compiles all Java source code to catch syntax errors, missing imports, type mismatches and broken references early. If the code doesn't compile cleanly this step fails immediately, preventing broken code from ever reaching the test stage.
 
 ---
 
@@ -1428,6 +1396,8 @@ This project demonstrates key competencies for the **Lead QA Engineer** position
 
 ---
 
+
 *This README is a living document. Please update it when adding new features, test scenarios, or documentation.*
+
 
 
